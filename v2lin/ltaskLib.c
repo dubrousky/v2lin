@@ -977,7 +977,7 @@ void *
 	 * with atomic_xchange here and in the taskActivate function simultaneously
 	 */
 	sched_yield();
-    while (0 == tcb->pthrid)
+    while (0 == (volatile pthread_t)tcb->pthrid)
     {
     	sched_yield();
     	usleep( 5000 );

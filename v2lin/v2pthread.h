@@ -81,7 +81,7 @@ typedef struct v2pt_pthread_ctl_blk
         /*
         ** Thread ID for task
         */
-    volatile pthread_t pthrid;
+    pthread_t pthrid;
 
         /*
         ** Thread attributes for task
