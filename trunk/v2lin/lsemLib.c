@@ -404,6 +404,14 @@ v2pt_sema4_t *
 {
     v2pt_sema4_t *semaphore;
 
+    if ( (opt & SEM_Q_PRIORITY)
+    	||(opt & SEM_DELETE_SAFE)
+	||(opt & SEM_INVERSION_SAFE) )
+    {
+    	errno = ENOSYS;
+		return( NULL );
+    }
+
     /*
     **  First allocate memory for the semaphore control block
     */
@@ -442,6 +450,14 @@ v2pt_sema4_t *
     semCCreate( int opt, int initial_count )
 {
     v2pt_sema4_t *semaphore;
+
+    if ( (opt & SEM_Q_PRIORITY)
+    	||(opt & SEM_DELETE_SAFE)
+	||(opt & SEM_INVERSION_SAFE) )
+    {
+    	errno = ENOSYS;
+		return( NULL );
+    }
 
     /*
     **  First allocate memory for the semaphore control block
@@ -484,7 +500,7 @@ v2pt_sema4_t *
 	||(opt & SEM_INVERSION_SAFE) )
     {
     	errno = ENOSYS;
-	return( NULL );
+		return( NULL );
     }
     /*
     **  First allocate memory for the semaphore control block
