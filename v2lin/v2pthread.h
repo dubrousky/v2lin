@@ -21,6 +21,7 @@
  ****************************************************************************/
 
 #include <pthread.h>
+//#include <asm/atomic.h>
 
 #if __cplusplus
 extern "C" {
@@ -80,8 +81,7 @@ typedef struct v2pt_pthread_ctl_blk
         /*
         ** Thread ID for task
         */
-    pthread_t
-        pthrid;
+    volatile pthread_t pthrid;
 
         /*
         ** Thread attributes for task
