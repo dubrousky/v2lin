@@ -3087,11 +3087,15 @@ int task1( int dummy0, int dummy1, int dummy2, int dummy3, int dummy4,
 /*****************************************************************************
 **  user system initialization
 *****************************************************************************/
+#ifdef _USR_SYS_INIT_KILL
+void
+    user_sysinit( void )
+{
+#else
 int main ( int argc, char **argv )
 {
-
-		v2lin_init();
-		
+    v2lin_init();
+#endif		
     printf( "\r\n" );
 
     puts( "Creating MsgQueue 1, Priority Queuing, with 9 1-byte to 16-byte messages" );
@@ -3127,11 +3131,18 @@ int main ( int argc, char **argv )
                           0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
 
     printf( "\r\n" );
-    
-		/*****************************************************************************
-		**  user system shutdown and resource cleanup
-		*****************************************************************************/
+#ifdef _USR_SYS_INIT_KILL
+}
+void
+    user_syskill( void )
+{
+#endif
+    /*****************************************************************************
+    **  user system shutdown and resource cleanup
+    *****************************************************************************/
     while ( getchar() != (int)'q' )
         sleep( 1 );
+#ifndef _USR_SYS_INIT_KILL
     return 0;
+#endif
 }
