@@ -1,4 +1,4 @@
-#============================================================================
+
 #  Validation Suite Makefile
 #   
 #  Copyright (C) 2000  Monta Vista Software Inc.
@@ -32,7 +32,7 @@
 .c.o:
 	$(CC) $(CFLAGS) -c $*.c
 
-CFLAGS	+= -Wall -O2 -I. -Itarget_h -I- -D_GNU_SOURCE -D_REENTRANT
+CFLAGS	+= -Wall -I. -Itarget_h -I- -D_GNU_SOURCE -D_REENTRANT
 
 #----------------------------------------------------------------------------
 # Make the program...
