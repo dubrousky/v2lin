@@ -227,7 +227,9 @@ int v2lin_init(void)
     /*
     **  Set up a v2pthread task and TCB for the system root task.
     */
+#ifdef DIAG_PRINTFS 
     printf( "\r\nStarting System Root Task" );
+#endif
     taskInit( &root_tcb, "tUsrRoot", 0, 0, 0, 0, NULL,
               0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
 
@@ -245,7 +247,9 @@ int v2lin_init(void)
     /*
     **  Set up a v2pthread task and TCB for the system exception task.
     */
+#ifdef DIAG_PRINTFS 
     printf( "\r\nStarting System Exception Task" );
+#endif
     taskInit( &excp_tcb, "tExcTask", 0, 0, 0, 0, exception_task,
               0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
 
