@@ -30,9 +30,6 @@
 #include "v2pthread.h"
 #include "vxw_defs.h"
 
-#undef DIAG_PRINTFS
-
-
 /*
 **  process_timer_list is a system function used to service watchdog timers
 **                     when a system clock tick expires.  It is called from

@@ -32,8 +32,6 @@
 #include "v2pthread.h"
 #include "vxw_defs.h"
 
-#undef DIAG_PRINTFS
-
 /*
 **  selfRestart is a system function used by a task to restart itself.
 **              The function creates a temporary watchdog timer which restarts 
@@ -935,6 +933,9 @@ void *
 {
     v2pthread_cb_t *tcb;
 
+#ifdef DEBUG_PRINTS
+	printf("\ntask_wrapper, arg=%p, errno=%d\n", arg, errno);
+#endif
     /*
     **  Ensure that errno for this thread is cleared.
     */
@@ -956,7 +957,7 @@ void *
     **  Call the v2pthread task.  Normally this is an endless loop and doesn't
     **  return here.
     */
-#ifdef DIAG_PRINTFS 
+#ifdef DIAG_PRINTFS
     printf( "\r\ntask_wrapper starting task @ %p tcb @ %p:",
             tcb->entry_point, tcb );
     sleep( 1 );

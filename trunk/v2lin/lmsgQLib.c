@@ -30,8 +30,6 @@
 #include "v2pthread.h"
 #include "vxw_defs.h"
 
-#undef DIAG_PRINTFS
-
 #define SEND  0
 #define URGNT 1
 #define KILLD 2
