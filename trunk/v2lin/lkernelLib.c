@@ -211,50 +211,6 @@ int exception_task( int dummy0, int dummy1, int dummy2, int dummy3,
 }
 
 /*****************************************************************************
-**  system root task
-**
-**  In the v2pthreads environment, the root task serves only to
-**  start the system exception task and to provide a context in which the
-**  user_sysinit function may call any supported v2pthread function, even
-**  though that function might block.
-*****************************************************************************/
-int root_task( int dummy0, int dummy1, int dummy2, int dummy3, int dummy4,
-               int dummy5, int dummy6, int dummy7, int dummy8, int dummy9 )
-{
-    int max_priority;
-
-    /*
-    **  Set up a v2pthread task and TCB for the system exception task.
-    */
-    printf( "\r\nStarting System Exception Task" );
-    taskInit( &excp_tcb, "tExcTask", 0, 0, 0, 0, exception_task,
-              0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
-
-    /*
-    **  Get the maximum permissible priority level for a pthread
-    **  and make that the pthreads priority for the exception task.
-    */
-    max_priority = sched_get_priority_max( SCHED_FIFO );
-    (excp_tcb.prv_priority).sched_priority = (max_priority - 1);
-    pthread_attr_setschedparam( &(excp_tcb.attr), &(excp_tcb.prv_priority) );
-
-    taskActivate( excp_tcb.taskid );
-
-    while ( 1 )
-        taskDelay( 500 );
-
-    return( 0 );
-}
-
-/*****************************************************************************
-**  system initialization pthread
-*****************************************************************************/
-void *init_system( void *dummy )
-{
-    return( (void *)NULL );
-}
-    
-/*****************************************************************************
 **  v2pthread main program
 **
 **  This function serves as the entry point to the v2pthreads emulation
@@ -272,7 +228,7 @@ int v2lin_init(void)
     **  Set up a v2pthread task and TCB for the system root task.
     */
     printf( "\r\nStarting System Root Task" );
-    taskInit( &root_tcb, "tUsrRoot", 0, 0, 0, 0, root_task,
+    taskInit( &root_tcb, "tUsrRoot", 0, 0, 0, 0, NULL,
               0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
 
     /*
@@ -282,8 +238,26 @@ int v2lin_init(void)
     max_priority = sched_get_priority_max( SCHED_FIFO );
     (root_tcb.prv_priority).sched_priority = max_priority;
     pthread_attr_setschedparam( &(root_tcb.attr), &(root_tcb.prv_priority) );
+	root_tcb.state = READY;
+	root_tcb.pthrid = pthread_self();
+	taskActivate( root_tcb.taskid );
+	
+    /*
+    **  Set up a v2pthread task and TCB for the system exception task.
+    */
+    printf( "\r\nStarting System Exception Task" );
+    taskInit( &excp_tcb, "tExcTask", 0, 0, 0, 0, exception_task,
+              0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
 
-    taskActivate( root_tcb.taskid );
+    /*
+    **  Get the maximum permissible priority level for a pthread
+    **  and make that the pthreads priority for the exception task.
+    */
+    max_priority = sched_get_priority_max( SCHED_FIFO );
+    (excp_tcb.prv_priority).sched_priority = (max_priority - 1);
+    pthread_attr_setschedparam( &(excp_tcb.attr), &(excp_tcb.prv_priority) );
+
+    taskActivate( excp_tcb.taskid );
 
     errno = 0;
     return errno;
