@@ -22,6 +22,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
  ****************************************************************************/
+#ifndef __VXW_HDRS_H
+#define __VXW_HDRS_H
 
 #if __cplusplus
 extern "C" {
@@ -144,3 +146,4 @@ extern STATUS    wdStart( WDOG_ID wdId, int delay, FUNCPTR funcptr, int parm );
 }
 #endif
 
+#endif // __VXW_HDRS_H

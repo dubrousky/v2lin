@@ -1194,12 +1194,12 @@ STATUS
 
     if (opts != 0 ) 
     {
-	/*
-	** no options are currently implemented. If there will be some,
-	** change the condition
-	*/
-	errno = ENOSYS;
-	return (errno);
+		/*
+		 * no options are currently implemented. If there will be some,
+		 * change the condition
+		 */
+		errno = ENOSYS;
+		return (errno);
     }
 
     if ( tcb != (v2pthread_cb_t *)NULL )
