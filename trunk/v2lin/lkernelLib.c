@@ -161,7 +161,11 @@ STATUS
             /*
             **  Activate the new scheduling policy
             */
-            pthread_setschedparam( tcb->pthrid, sched_policy, &schedparam );
+            if (0 != pthread_setschedparam( tcb->pthrid, sched_policy,
+					   &schedparam ))
+	          {
+                perror( "\r\nkernelTimeSlice pthread_setschedparam returned error:" );
+	          }
         }
     }
 

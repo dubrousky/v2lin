@@ -637,9 +637,9 @@ static int
     **  collapse some distinct v2pthread priority levels into the same priority.
     **  Use this technique if the tasks span a large priority range but no
     **  tasks are within fewer than 3 levels of one another.
+    */
     pthread_priority *= max_priority;
     pthread_priority /= (MIN_V2PT_PRIORITY + 1);
-    */
 
     /*
     **  Now 'clip' the new priority level to within priority range.
@@ -800,6 +800,14 @@ void
     pthread_cleanup_pop( 1 );
 }
 
+
+void tcb_delete_unlock(v2pthread_cb_t *tcb)
+{
+	tcb_delete(tcb);
+	taskUnlock();
+}
+
+
 /*****************************************************************************
 ** taskDeleteForce - removes the specified task(s) from the task list,
 **                   frees the memory occupied by the task control block(s),
@@ -882,7 +890,7 @@ STATUS
             fflush( stdout );
 #endif
             pthread_detach( self_tcb->pthrid );
-            pthread_cleanup_push( (void(*)(void *))tcb_delete,
+            pthread_cleanup_push( (void(*)(void *))tcb_delete_unlock,
                                   (void *)self_tcb );
             pthread_exit( (void *)NULL );
             pthread_cleanup_pop( 0 );
@@ -962,6 +970,21 @@ void *
             tcb->entry_point, tcb );
     sleep( 1 );
 #endif
+	
+    /*
+	 * TODO: replace this ugly patch with waiting for conditional variable on tcb->thrid
+	 * or better yet, fill the tcb->pthrid with pthread_self(). Check if this can be done
+	 * with atomic_xchange here and in the taskActivate function simultaneously
+	 */
+	sched_yield();
+    while (0 == tcb->pthrid)
+    {
+    	sched_yield();
+    	usleep( 5000 );
+#ifdef DIAG_PRINTFS
+    	printf("task_wrapper() PATCH! task (%s) wait for tcb->pthrid to get its value... \n", tcb->taskname ? tcb->taskname : "no-name");
+#endif
+    }
     (*(tcb->entry_point))( tcb->parms[0], tcb->parms[1], tcb->parms[2],
                            tcb->parms[3], tcb->parms[4], tcb->parms[5],
                            tcb->parms[6], tcb->parms[7], tcb->parms[8],
@@ -1449,6 +1472,11 @@ STATUS
                     tcb );
 #endif
 
+			/*
+			 * TODO There is un ugly patch here to ensure the called thread has a valid tcb->pthrid
+			 * check if that can be done better with atomic_set
+			 */
+			tcb->pthrid = 0;
             if ( pthread_create( &(tcb->pthrid), &(tcb->attr),
                                  task_wrapper, (void *)tcb ) != 0 )
             {
@@ -1477,6 +1505,12 @@ STATUS
     **  to a task made runnable by this call.
     */
     taskUnlock();
+
+#ifdef DIAG_PRINTFS
+	printf("taskActivate: ADDED task=%d (%s) tcb=0x%X, vxw_Prio=%d, Linux-Prio=%d\n", 
+		(int)tcb->pthrid, tcb->taskname ? tcb->taskname : "no-name", 
+		(int)tcb, tcb->vxw_priority, (tcb->prv_priority).sched_priority);
+#endif
 
     if ( error != OK )
     {
@@ -1699,7 +1733,7 @@ char *
 {
     v2pthread_cb_t *current_tcb;
     char *taskname;
-
+	static char NullTaskName[] = "NULLTASK";
     pthread_cleanup_push( (void(*)(void *))pthread_mutex_unlock,
                           (void *)&task_list_lock );
     pthread_mutex_lock( &task_list_lock );
@@ -1718,7 +1752,7 @@ char *
     if ( current_tcb != (v2pthread_cb_t *)NULL )
         taskname = current_tcb->taskname;
     else
-        taskname = (char *)NULL;
+        taskname = NullTaskName;
 
     pthread_cleanup_pop( 1 );
 
