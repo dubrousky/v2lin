@@ -27,6 +27,7 @@
 extern "C" {
 #endif
 
+#include <sys/types.h>
 #include "vxw_defs.h"
 
 /*
