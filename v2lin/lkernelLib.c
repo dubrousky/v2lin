@@ -30,6 +30,27 @@
 #include "v2pthread.h"
 #include "vxw_defs.h"
 
+#ifdef _USR_SYS_INIT_KILL
+/*
+**  user_sysinit is a user-defined function.  It contains all initialization
+**               calls to create any tasks and other objects reqired for
+**               startup of the user's RTOS system environment.  It is called
+**               from (and runs in) the system root task context.
+*/
+extern void user_sysinit( void );
+
+/*
+**  user_syskill is a user-defined function.  It is called from the main
+**               process context of the v2pthreads virtual machine.
+**               At its simplest it is an unconditional infinite loop.
+**               It may optionally wait for some condition, shut down the
+**               user's RTOS system environment, clean up the resources used
+**               by the various RTOS objects, and then return to the main
+**               process of the v2pthreads virtual machine.
+**               The v2pthreads virtual machine terminates upon its return.
+*/
+extern void user_syskill( void );
+#endif
 /*
 **  process_timer_list is a system function used to service watchdog timers
 **                     when a system clock tick expires.  It is called from
@@ -211,46 +232,24 @@ int exception_task( int dummy0, int dummy1, int dummy2, int dummy3,
     return( 0 );
 }
 
+#ifdef _USR_SYS_INIT_KILL
 /*****************************************************************************
-**  v2pthread main program
+**  system root task
 **
-**  This function serves as the entry point to the v2pthreads emulation
-**  environment.  It serves as the parent process to all v2pthread tasks.
-**  This process creates an initialization thread and sets the priority of
-**  that thread to the highest allowable value.  This allows the initialization
-**  thread to complete its work without being preempted by any of the task
-**  threads it creates.
+**  In the v2pthreads environment, the root task serves only to
+**  start the system exception task and to provide a context in which the
+**  user_sysinit function may call any supported v2pthread function, even
+**  though that function might block.
 *****************************************************************************/
-int v2lin_init(void)
+int root_task( int dummy0, int dummy1, int dummy2, int dummy3, int dummy4,
+               int dummy5, int dummy6, int dummy7, int dummy8, int dummy9 )
 {
     int max_priority;
 
     /*
-    **  Set up a v2pthread task and TCB for the system root task.
-    */
-#ifdef DIAG_PRINTFS 
-    printf( "\r\nStarting System Root Task" );
-#endif
-    taskInit( &root_tcb, "tUsrRoot", 0, 0, 0, 0, NULL,
-              0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
-
-    /*
-    **  Get the maximum permissible priority level for the current OS
-    **  and make that the pthreads priority for the root task.
-    */
-    max_priority = sched_get_priority_max( SCHED_FIFO );
-    (root_tcb.prv_priority).sched_priority = max_priority;
-    pthread_attr_setschedparam( &(root_tcb.attr), &(root_tcb.prv_priority) );
-	root_tcb.state = READY;
-	root_tcb.pthrid = pthread_self();
-	taskActivate( root_tcb.taskid );
-	
-    /*
     **  Set up a v2pthread task and TCB for the system exception task.
     */
-#ifdef DIAG_PRINTFS 
     printf( "\r\nStarting System Exception Task" );
-#endif
     taskInit( &excp_tcb, "tExcTask", 0, 0, 0, 0, exception_task,
               0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
 
@@ -264,6 +263,98 @@ int v2lin_init(void)
 
     taskActivate( excp_tcb.taskid );
 
+    user_sysinit();
+
+    while ( 1 )
+        taskDelay( 500 );
+
+    return( 0 );
+}
+
+/*****************************************************************************
+**  system initialization pthread
+*****************************************************************************/
+void *init_system( void *dummy )
+{
+    return( (void *)NULL );
+}
+    
+#endif //_USR_SYS_INIT_KILL
+/*****************************************************************************
+**  v2pthread main program
+**
+**  This function serves as the entry point to the v2pthreads emulation
+**  environment.  It serves as the parent process to all v2pthread tasks.
+**  This process creates an initialization thread and sets the priority of
+**  that thread to the highest allowable value.  This allows the initialization
+**  thread to complete its work without being preempted by any of the task
+**  threads it creates.
+*****************************************************************************/
+#ifdef _USR_SYS_INIT_KILL
+int main( int argc, char **argv )
+#else
+int v2lin_init(void)
+#endif
+{
+    int max_priority;
+
+    /*
+    **  Set up a v2pthread task and TCB for the system root task.
+    */
+#ifdef DIAG_PRINTFS 
+    printf( "\r\nStarting System Root Task" );
+#endif
+#ifdef _USR_SYS_INIT_KILL
+    taskInit( &root_tcb, "tUsrRoot", 0, 0, 0, 0, root_task,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
+#else
+    taskInit( &root_tcb, "tUsrRoot", 0, 0, 0, 0, NULL,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
+#endif
+
+    /*
+    **  Get the maximum permissible priority level for the current OS
+    **  and make that the pthreads priority for the root task.
+    */
+    max_priority = sched_get_priority_max( SCHED_FIFO );
+    (root_tcb.prv_priority).sched_priority = max_priority;
+    pthread_attr_setschedparam( &(root_tcb.attr), &(root_tcb.prv_priority) );
+#ifdef _USR_SYS_INIT_KILL
+    
+    taskActivate( root_tcb.taskid );
+#else
+	root_tcb.state = READY;
+	root_tcb.pthrid = pthread_self();
+	taskActivate( root_tcb.taskid );
+	
+    /*
+    **  Set up a v2pthread task and TCB for the system exception task.
+    */
+#ifdef DIAG_PRINTFS 
+    printf( "\r\nStarting System Exception Task" );
+#endif
+    taskInit( &excp_tcb, "tExcTask", 0, 0, 0, 0, exception_task,
+              0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
+    /*
+    **  Get the maximum permissible priority level for a pthread
+    **  and make that the pthreads priority for the exception task.
+    */
+    max_priority = sched_get_priority_max( SCHED_FIFO );
+    (excp_tcb.prv_priority).sched_priority = (max_priority - 1);
+    pthread_attr_setschedparam( &(excp_tcb.attr), &(excp_tcb.prv_priority) );
+    taskActivate( excp_tcb.taskid );
+#endif
+
     errno = 0;
+#ifdef _USR_SYS_INIT_KILL
+    
+    /*
+    **  Wait for the return.
+    */    
+    user_syskill();
+
+    exit( 0 );
+#else
     return errno;
+#endif
 }
