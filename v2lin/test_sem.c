@@ -187,14 +187,20 @@ int OtherThreadFunc(int p1, int p2, int p3, int p4, int p5, int p6, int p7, int 
     return 0;
 }
 
-int main()
+#ifdef _USR_SYS_INIT_KILL
+void user_sysinit( void )
 {
+#else
+int main ( int argc, char **argv )
+{
+#endif		
     int randomizer_thread1, randomizer_thread2;
     int other_thread;
     int i;
 
+#ifndef _USR_SYS_INIT_KILL
     v2lin_init();
-
+#endif
     s_binary = semBCreate( SEM_Q_FIFO, 0 );
     s_counting = semCCreate( SEM_Q_FIFO, TEST_SEM_INIT_COUNT );
     s_mutex = semMCreate( SEM_Q_FIFO );
@@ -273,7 +279,11 @@ int main()
 
     randomizer_thread1 = taskSpawn( "thread1", 0,0,0, RandomizerThreadFunc, 0,0,0,0,0,0,0,0,0,0 );
     randomizer_thread2 = taskSpawn( "thread2", 0,0,0, RandomizerThreadFunc, 0,0,0,0,0,0,0,0,0,0 );
-
+#ifdef _USR_SYS_INIT_KILL
+}
+void user_syskill( void )
+{
+#endif
     while(1)
     {
         sleep(1);
@@ -281,7 +291,7 @@ int main()
         printf("\rTaken:%u Given:%u Take timeout:%u Fail to Take %u Fail to Give:%u",cTake, cGive, 
                 cTakeTimeout, cTakeErr, cGiveErr );
     }
-
+#ifndef _USR_SYS_INIT_KILL
     return 0;
+#endif
 }
-
