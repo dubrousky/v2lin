@@ -31,8 +31,6 @@
 #include "v2pthread.h"
 #include "vxw_defs.h"
 
-#undef DIAG_PRINTFS
-
 #define SEM_OPT_MASK       0x0f
 #define SEM_TYPE_MASK      0xf0
 

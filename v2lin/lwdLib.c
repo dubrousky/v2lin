@@ -31,8 +31,6 @@
 #include "v2pthread.h"
 #include "vxw_defs.h"
 
-#undef DIAG_PRINTFS
-
 /*****************************************************************************
 **  Control block for v2pthread watchdog timer
 **
