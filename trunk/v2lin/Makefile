@@ -38,26 +38,27 @@ CFLAGS	+= -Wall -I. -Itarget_h -I- -D_GNU_SOURCE -D_REENTRANT
 # Make the program...
 #----------------------------------------------------------------------------
 OBJS =  \
-	lkernelLib.o ltaskLib.o lmsgQLib.o lsemLib.o lwdLib.o validate.o
+	lkernelLib.o ltaskLib.o lmsgQLib.o lsemLib.o lwdLib.o
 
 LIB_SHORT = v2lin
 LIB_FULL = lib$(LIB_SHORT).so
 
-PROG = validate
+#PROG = validate
+PROG = test_sem
 
 all:	$(PROG)
 
 $(LIB_FULL): $(OBJS) Makefile
 	$(CC) -shared $(CFLAGS) $(OBJS) -o $(LIB_FULL) -lpthread
 
-$(PROG):	$(LIB_FULL)
-	$(CC) $(CFLAGS) -o $(PROG) -L. -l$(LIB_SHORT)
+$(PROG):	$(LIB_FULL) $(PROG).o
+	$(CC) $(CFLAGS) -o $(PROG) $(PROG).o -L. -l$(LIB_SHORT)
 
 #----------------------------------------------------------------------------
 # Compile modules w/ Inference rules
 #----------------------------------------------------------------------------
 clean:
-	rm -f $(OBJS) $(PROG) $(LIB_FULL)
+	rm -f $(OBJS) $(PROG).o $(PROG) $(LIB_FULL)
 
 depend:
 	makedepend -s "# DO NOT DELETE" -- *.c
