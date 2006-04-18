@@ -1,4 +1,4 @@
-
+# test
 #  Validation Suite Makefile
 #   
 #  Copyright (C) 2000  Monta Vista Software Inc.
