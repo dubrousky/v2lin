@@ -23,6 +23,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <sys/time.h>
+#include <errno.h>
 
 #include <sys/types.h>
 #include <linux/unistd.h>
